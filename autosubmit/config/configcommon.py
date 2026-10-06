@@ -1889,7 +1889,7 @@ class AutosubmitConfig:
         :param parameters: Dictionary to populate with HPC values. If None, use self.experiment_data.
         """
         platforms = self.experiment_data.get("PLATFORMS", {})
-        hpcarch: str = self.experiment_data.get("DEFAULT", {}).get("HPCARCH", PlatformType.LOCAL)
+        hpcarch: str = self.experiment_data.get("DEFAULT", {}).get("HPCARCH", PlatformType.LOCAL.upper())
         hpcarch_data: dict = platforms.get(hpcarch, {})
 
         target = parameters if parameters is not None else self.experiment_data

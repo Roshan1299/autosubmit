@@ -21,12 +21,11 @@ import configparser
 import io
 import multiprocessing
 import os
-from collections.abc import Callable, Generator, Iterator
+from collections.abc import Callable, Generator
 from contextlib import suppress
 from dataclasses import dataclass
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from time import time_ns
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
@@ -37,7 +36,7 @@ from testcontainers.community.postgres import PostgresContainer  # type: ignore
 from testcontainers.core.container import DockerContainer  # type: ignore
 
 from autosubmit.config.basicconfig import BasicConfig
-from autosubmit.config.configcommon import AutosubmitConfig
+from autosubmit.config.registry import load_config
 from autosubmit.experiment.manage import create as create_fn
 from autosubmit.experiment.manage import expid_fn
 from autosubmit.experiment.utils import next_experiment_id
@@ -71,6 +70,8 @@ if TYPE_CHECKING:
     from pytest import FixtureRequest
     from pytest_mock import MockerFixture
 
+    from autosubmit.config.configcommon import AutosubmitConfig
+
 _PG_USER = 'postgres'
 _PG_PASSWORD = 'postgres'
 _PG_DATABASE = 'autosubmit_test'
@@ -80,7 +81,7 @@ _PG_DATABASE = 'autosubmit_test'
 class AutosubmitExperiment:
     """This holds information about an experiment created by Autosubmit."""
     expid: str
-    as_conf: AutosubmitConfig
+    as_conf: "AutosubmitConfig"
     exp_path: Path
     tmp_dir: Path
     aslogs_dir: Path
@@ -232,10 +233,7 @@ def autosubmit_exp(
         job_data_dir = Path(BasicConfig.JOBDATA_DIR)
         job_data_dir.mkdir(parents=True, exist_ok=True)
 
-        config = AutosubmitConfig(
-            expid=expid,
-            basic_config=BasicConfig
-        )
+        config = load_config(expid=expid)
         config.reload(force_load=True)
 
         # Remove original files. So we can save a new file with all the memory modifications.
@@ -307,24 +305,6 @@ def autosubmit_exp(
         )
 
     return _create_autosubmit_exp
-
-
-@pytest.fixture
-def paramiko_platform() -> Iterator[ParamikoPlatform]:
-    local_root_dir = TemporaryDirectory()
-    config = {
-        "LOCAL_ROOT_DIR": local_root_dir.name,
-        "LOCAL_TMP_DIR": 'tmp'
-    }
-    platform = ParamikoPlatform(expid='a000', name='local', config=config)
-    platform.job_status = {
-        'COMPLETED': [],
-        'RUNNING': [],
-        'QUEUING': [],
-        'FAILED': []
-    }
-    yield platform
-    local_root_dir.cleanup()
 
 
 @pytest.fixture(scope="function")

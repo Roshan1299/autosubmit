@@ -167,8 +167,7 @@ class TestJob:
 
         assert initial_fail_count + 1 == incremented_fail_count
 
-    @patch('autosubmit.config.basicconfig.BasicConfig')
-    def test_header_tailer(self, mocked_global_basic_config: Mock, experiment_config_fixture):
+    def test_header_tailer(self, experiment_config_fixture, monkeypatch):
         """Test if header and tailer are being properly substituted onto the final .cmd file without
         a bunch of mocks
 
@@ -335,16 +334,11 @@ CONFIG:
 
                             configuration.flush()
 
-                        mocked_basic_config = FakeBasicConfig
-                        mocked_basic_config.read = MagicMock()  # type: ignore
+                        monkeypatch.setattr(BasicConfig, 'LOCAL_ROOT_DIR', str(temp_dir))
+                        monkeypatch.setattr(BasicConfig, 'STRUCTURES_DIR', '/dummy/structures/dir')
+                        monkeypatch.setattr(BasicConfig, 'read', lambda: None)
 
-                        mocked_basic_config.LOCAL_ROOT_DIR = str(temp_dir)
-                        mocked_basic_config.STRUCTURES_DIR = '/dummy/structures/dir'
-
-                        mocked_global_basic_config.LOCAL_ROOT_DIR.return_value = str(temp_dir)
-
-                        config = AutosubmitConfig(expid, basic_config=mocked_basic_config,
-                                                  parser_factory=YAMLParserFactory())
+                        config = AutosubmitConfig(expid)
                         config.reload(True)
 
                         # act
@@ -1363,7 +1357,7 @@ def test_write_end_time_ignore_exp_history(completed: bool, existing_lines: str,
     len(existing_lines.split('\n')) if existing_lines else 1
 
     as_conf = autosubmit_config(_EXPID, experiment_data={})
-    tmp_path = Path(as_conf.basic_config.LOCAL_ROOT_DIR, _EXPID, as_conf.basic_config.LOCAL_TMP_DIR)
+    tmp_path = Path(BasicConfig.LOCAL_ROOT_DIR, _EXPID, as_conf.basic_config.LOCAL_TMP_DIR)
 
     status = Status.COMPLETED if True else Status.WAITING
     job = Job(f'{_EXPID}_dummy', 1, status, 0)

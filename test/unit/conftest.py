@@ -23,12 +23,12 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from random import choice, randint, seed
 from time import time
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 import pytest
 
 from autosubmit.config.basicconfig import BasicConfig
-from autosubmit.config.configcommon import AutosubmitConfig
+from autosubmit.config.registry import load_config
 from autosubmit.config.yamlparser import YAMLParserFactory
 from autosubmit.install import install
 from autosubmit.job.job import Job
@@ -41,6 +41,9 @@ from autosubmit.platforms.pjmplatform import PJMPlatform
 from autosubmit.platforms.psplatform import PsPlatform
 from autosubmit.platforms.slurmplatform import SlurmPlatform
 
+if TYPE_CHECKING:
+    from autosubmit.config.configcommon import AutosubmitConfig
+
 
 # Copied from the autosubmit config parser, that I believe is a revised one from the create_as_conf
 class AutosubmitConfigFactory(Protocol):
@@ -52,7 +55,7 @@ class AutosubmitConfigFactory(Protocol):
             include_basic_config: bool = True,
             *args: Any,
             **kwargs: Any
-    ) -> AutosubmitConfig: ...
+    ) -> "AutosubmitConfig": ...
 
 
 @pytest.fixture(scope="function")
@@ -76,7 +79,7 @@ def autosubmit_config(
             include_basic_config: bool = True,
             *_,
             **kwargs
-    ) -> AutosubmitConfig:
+    ) -> "AutosubmitConfig":
         """Create an Autosubmit configuration object.
 
         The values in ``BasicConfig`` are configured to use a temporary directory as base,
@@ -127,10 +130,7 @@ def autosubmit_config(
         job_data_dir = Path(BasicConfig.JOBDATA_DIR)
         job_data_dir.mkdir(parents=True, exist_ok=True)
 
-        config = AutosubmitConfig(
-            expid=expid,
-            basic_config=BasicConfig
-        )
+        config = load_config(expid=expid)
 
         config.experiment_data = {**config.experiment_data, **experiment_data}
         # Populate the configuration object's ``experiment_data`` dictionary with the values
