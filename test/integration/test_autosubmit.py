@@ -26,7 +26,6 @@ import pytest
 
 from autosubmit.config.basicconfig import BasicConfig
 from autosubmit.config.configcommon import AutosubmitConfig
-from autosubmit.config.yamlparser import YAMLParserFactory
 from autosubmit.database.db_common import (
     get_experiment_description,
     update_experiment_description_version,

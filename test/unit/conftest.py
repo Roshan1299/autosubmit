@@ -23,12 +23,12 @@ from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from random import choice, randint, seed
 from time import time
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import Any, Protocol
 
 import pytest
 
 from autosubmit.config.basicconfig import BasicConfig
-from autosubmit.config.registry import load_config
+from autosubmit.config.configcommon import AutosubmitConfig
 from autosubmit.config.yamlparser import YAMLParserFactory
 from autosubmit.install import install
 from autosubmit.job.job import Job
@@ -40,9 +40,6 @@ from autosubmit.platforms.pbsplatform import PBSPlatform
 from autosubmit.platforms.pjmplatform import PJMPlatform
 from autosubmit.platforms.psplatform import PsPlatform
 from autosubmit.platforms.slurmplatform import SlurmPlatform
-
-if TYPE_CHECKING:
-    from autosubmit.config.configcommon import AutosubmitConfig
 
 
 # Copied from the autosubmit config parser, that I believe is a revised one from the create_as_conf
@@ -130,7 +127,9 @@ def autosubmit_config(
         job_data_dir = Path(BasicConfig.JOBDATA_DIR)
         job_data_dir.mkdir(parents=True, exist_ok=True)
 
-        config = load_config(expid=expid)
+        # NOTE: Do not use the registry, as you do not want to re-use the configuration
+        #       objects from other tests, so no ``load_config`` here!
+        config = AutosubmitConfig(expid=expid)
 
         config.experiment_data = {**config.experiment_data, **experiment_data}
         # Populate the configuration object's ``experiment_data`` dictionary with the values

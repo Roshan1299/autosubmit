@@ -28,7 +28,6 @@ from unittest.mock import MagicMock, Mock  # type: ignore
 
 import pytest
 from bscearth.utils.date import date2str
-from mock.mock import patch  # type: ignore
 
 from autosubmit.config.configcommon import (
     AutosubmitConfig,

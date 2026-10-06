@@ -59,8 +59,6 @@ class AutosubmitConfig:
         self.ignore_undefined_platforms = False
         self.ignore_file_path = False
         self.expid = expid
-        # TODO: Remove once anyone has time to update the tests.
-        #       No other code should be using this property now, only (at lof ot) tests.
         self.basic_config = BasicConfig
         BasicConfig.read()
         if not Path(BasicConfig.LOCAL_ROOT_DIR, expid).exists():
